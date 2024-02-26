@@ -14,59 +14,31 @@ struct ContentView: View {
     @State private var enlarge = false
     @State private var showImmersiveSpace = false
     @State private var immersiveSpaceIsShown = false
-
+    @State private var blaToggle = false
+    @State private var joke: String = ""
+    
     @Environment(\.openImmersiveSpace) var openImmersiveSpace
     @Environment(\.dismissImmersiveSpace) var dismissImmersiveSpace
 
     var body: some View {
         VStack {
-//            RealityView { content in
-//                // Add the initial RealityKit content
-//                if let scene = try? await Entity(named: "Scene", in: realityKitContentBundle) {
-//                    content.add(scene)
-//                }
-//            } update: { content in
-//                // Update the RealityKit content when SwiftUI state changes
-//                if let scene = content.entities.first {
-//                    let uniformScale: Float = enlarge ? 1.4 : 1.0
-//                    scene.transform.scale = [uniformScale, uniformScale, uniformScale]
-//                }
-//            }
-//            .gesture(TapGesture().targetedToAnyEntity().onEnded { _ in
-//                enlarge.toggle()
-//            })
-
             VStack (spacing: 12) {
-                Toggle("Enlarge RealityView Content", isOn: $enlarge)
-                    .font(.title)
-
-                Toggle("Show ImmersiveSpace", isOn: $showImmersiveSpace)
-                    .font(.title)
-                
-                Toggle("Bla", isOn: $blaToggle)
-            }
-            .frame(width: 360)
-            .padding(36)
-            .glassBackgroundEffect()
-
-        }
-        .onChange(of: showImmersiveSpace) { _, newValue in
-            Task {
-                if newValue {
-                    switch await openImmersiveSpace(id: "ImmersiveSpace") {
-                    case .opened:
-                        immersiveSpaceIsShown = true
-                    case .error, .userCancelled:
-                        fallthrough
-                    @unknown default:
-                        immersiveSpaceIsShown = false
-                        showImmersiveSpace = false
+                Text(joke.isEmpty ? "Press button to  generate joke" : joke)
+                    .font(.largeTitle)
+                    .multilineTextAlignment(.center)
+                Button {
+                    Task {
+                        var newJoke = try await performAPICall()
+                        joke = newJoke.value
                     }
-                } else if immersiveSpaceIsShown {
-                    await dismissImmersiveSpace()
-                    immersiveSpaceIsShown = false
+                } label: {
+                    Text("API call")
                 }
             }
+            .padding(36)
+        }
+        .onChange(of: blaToggle) { oldValue, newValue in
+            print("old value: \(oldValue). New value: \(newValue).")
         }
     }
 }
